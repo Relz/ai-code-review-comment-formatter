@@ -1,0 +1,48 @@
+name: Build Extension Archive
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Resolve version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tag matches manifest version
+        run: |
+          MANIFEST_VERSION="$(jq -r '.version' manifest.json)"
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+
+          if [[ "$MANIFEST_VERSION" != "$TAG_VERSION" ]]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match manifest.json version ($MANIFEST_VERSION)"
+            exit 1
+          fi
+
+      - name: Create extension archive
+        run: |
+          ARCHIVE_NAME="ai-code-review-comment-formatter-${{ steps.version.outputs.version }}.zip"
+          zip -r "$ARCHIVE_NAME" manifest.json scripts/ icons/
+          echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: extension-archive
+          path: ${{ env.ARCHIVE_NAME }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARCHIVE_NAME }}
+          generate_release_notes: true
