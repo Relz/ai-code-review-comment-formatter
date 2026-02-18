@@ -68,16 +68,16 @@
 
     details.ai-review-details > summary .ai-expand-hint {
       margin-left: auto;
-      font-size: 0.75em;
+      font-size: 1em;
       color: #888;
       font-weight: 400;
-      white-space: nowrap;
-      flex-shrink: 0;
+      transition: transform 0.15s ease;
     }
 
     details.ai-review-details[open] > summary .ai-expand-hint {
-      display: none;
+      transform: rotate(90deg);
     }
+
   `;
 
   /**
@@ -326,7 +326,7 @@
     // --- Expand hint ---
     const hint = document.createElement('span');
     hint.className = 'ai-expand-hint';
-    hint.textContent = 'Click to expand';
+    hint.textContent = '▸';
     summary.appendChild(hint);
 
     details.appendChild(summary);
